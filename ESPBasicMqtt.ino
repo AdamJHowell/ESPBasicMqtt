@@ -1,26 +1,39 @@
+#ifdef ESP8266
+// These headers are installed when the ESP8266 is installed in board manager.
+#include <ESP8266WiFi.h> // ESP8266 WiFi support.  https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
+#include <ESP8266mDNS.h> // OTA - mDNSResponder (Multicast DNS) for the ESP8266 family.
+#elif ESP32
+// These headers are installed when the ESP32 is installed in board manager.
+#include <WiFi.h>		// ESP32 Wifi support.  https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/src/WiFi.h
+#include <ESPmDNS.h> // OTA - Multicast DNS for the ESP32.
+#else
+#include <WiFi.h> // Arduino Wi-Fi support.  This header is part of the standard library.  https://www.arduino.cc/en/Reference/WiFi
+#endif
+
 #include <PubSubClient.h>
-#include <WiFi.h>
 
 #define LED 2
 
-const char *ssid = "Red5";
-const char *passwd = "8012254722";
+const char *ssid = "nunya";
+const char *passwd = "nunya";
+const char *broker = "nunya";
+uint16_t port = 1883;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient( wifiClient );
 
+
 void mqttCallback( char *topic, byte *payload, unsigned int length )
 {
-	Serial.print( "Message arrived on Topic:" );
-	Serial.print( topic );
+	Serial.printf( "\nMessage arrived on Topic: '%s'\n", topic );
 
 	char message[ 5 ] = { 0x00 };
 
-	for( int i = 0; i < length; i++ )
+	for( unsigned int i = 0; i < length; i++ )
 		message[ i ] = ( char ) payload[ i ];
 
 	message[ length ] = 0x00;
-	Serial.print( message );
+	Serial.println( message );
 	String str_msg = String( message );
 	if( str_msg.equals( "ON" ) )
 		digitalWrite( LED, HIGH );
@@ -31,43 +44,56 @@ void mqttCallback( char *topic, byte *payload, unsigned int length )
 	else if( str_msg.equals( "off" ) )
 		digitalWrite( LED, LOW );
 	else
-		Serial.printf( "Unknown command '%s'", message );
+		Serial.printf( "Unknown command '%s'\n", message );
 } // End of mqttCallback() function.
+
+
+void mqttConnect()
+{
+  digitalWrite( LED, LOW );
+	mqttClient.setServer( broker, port );
+	mqttClient.setCallback( mqttCallback );
+
+	if( mqttClient.connect( "ESP-Client", NULL, NULL ) )
+		Serial.print( "Connected to MQTT Broker.\n" );
+	else
+	{
+		Serial.printf( "MQTT Broker connection failed with state %d\n", mqttClient.state() );
+		delay( 5000 );
+    return;
+	}
+
+	mqttClient.subscribe( "led1" );
+  digitalWrite( LED, HIGH );
+} // End of mqttConnect() function.
+
 
 void setup()
 {
+  delay( 1000 );
 	Serial.begin( 115200 );
-	Serial.println( "Beginning setup()..." );
+	Serial.println( "\n\nBeginning setup()..." );
 	pinMode( LED, OUTPUT );
-	WiFi.begin( ssid, passwd );
 
-	Serial.print( "Connecting to AP" );
+	WiFi.begin( ssid, passwd );
+	Serial.printf( "Connecting to AP %s\n", ssid );
 	while( WiFi.status() != WL_CONNECTED )
 	{
 		Serial.print( "." );
 		delay( 1000 );
 	}
-	Serial.print( "Connected to WiFi AP, Got an IP address :" );
-	Serial.print( WiFi.localIP() );
+  Serial.println();
+	Serial.print( "Connected to Wi-Fi, got an IP address : " );
+	Serial.println( WiFi.localIP() );
 
-	mqttClient.setServer( "192.168.55.200", 1883 );
-	mqttClient.setCallback( mqttCallback );
-
-	if( mqttClient.connect( "ESP-Client", NULL, NULL ) )
-		Serial.print( "Connected to MQTT Broker" );
-	else
-	{
-		Serial.print( "MQTT Broker connection failed" );
-		Serial.print( mqttClient.state() );
-		delay( 1000 );
-	}
-
-	mqttClient.subscribe( "led1" );
-	Serial.println( "Function setup() has completed." );
 	digitalWrite( LED, HIGH );
+	Serial.println( "Function setup() has completed." );
 } // End of setup() function.
+
 
 void loop()
 {
 	mqttClient.loop();
+  if( !mqttClient.connected() )
+    mqttConnect();
 } // End of loop() function.
