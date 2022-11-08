@@ -65,6 +65,49 @@ void lookupWifiCode( int code, char * buffer)
 
 
 /**
+ * @brief lookupMQTTCode() will return the string for an integer state code.
+ */
+void lookupMQTTCode( int code, char * buffer)
+{
+    switch( code )
+    {
+        case -4:
+            snprintf( buffer, 29, "%s", "Connection timeout" );
+            break;
+        case -3:
+            snprintf( buffer, 29, "%s", "Connection lost" );
+            break;
+        case -2:
+            snprintf( buffer, 29, "%s", "Connect failed" );
+            break;
+        case -1:
+            snprintf( buffer, 29, "%s", "Disconnected" );
+            break;
+        case 0:
+            snprintf( buffer, 29, "%s", "Connected" );
+            break;
+        case 1:
+            snprintf( buffer, 29, "%s", "Bad protocol" );
+            break;
+        case 2:
+            snprintf( buffer, 29, "%s", "Bad client ID" );
+            break;
+        case 3:
+            snprintf( buffer, 29, "%s", "Unavailable" );
+            break;
+        case 4:
+            snprintf( buffer, 29, "%s", "Bad credentials" );
+            break;
+        case 5:
+            snprintf( buffer, 29, "%s", "Unauthorized" );
+            break;
+        default:
+            snprintf( buffer, 29, "%s", "Unknown MQTT state code" );
+    }
+} // End of lookupMQTTCode() function.
+
+
+/**
  * @brief wifiBasicConnect() will connect to a SSID.
  */
 void wifiBasicConnect()
@@ -103,7 +146,7 @@ void wifiBasicConnect()
 
 
 /**
- * @brief readTelemetry() will read the telemetry to global variables.
+ * @brief readTelemetry() will read the telemetry and save values to global variables.
  */
 void readTelemetry()
 {
@@ -135,49 +178,6 @@ void printTelemetry()
 	lookupMQTTCode( mqttStateCode, buffer );
 	Serial.printf( "MQTT state: %s\n", buffer );
 } // End of printTelemetry() function.
-
-
-/**
- * @brief lookupMQTTCode() will return the string for an integer state code.
- */
-void lookupMQTTCode( int code, char * buffer)
-{
-	switch( code )
-	{
-		case -4:
-			snprintf( buffer, 29, "%s", "Connection timeout" );
-			break;
-		case -3:
-			snprintf( buffer, 29, "%s", "Connection lost" );
-			break;
-		case -2:
-			snprintf( buffer, 29, "%s", "Connect failed" );
-			break;
-		case -1:
-			snprintf( buffer, 29, "%s", "Disconnected" );
-			break;
-		case 0:
-			snprintf( buffer, 29, "%s", "Connected" );
-			break;
-		case 1:
-			snprintf( buffer, 29, "%s", "Bad protocol" );
-			break;
-		case 2:
-			snprintf( buffer, 29, "%s", "Bad client ID" );
-			break;
-		case 3:
-			snprintf( buffer, 29, "%s", "Unavailable" );
-			break;
-		case 4:
-			snprintf( buffer, 29, "%s", "Bad credentials" );
-			break;
-		case 5:
-			snprintf( buffer, 29, "%s", "Unauthorized" );
-			break;
-		default:
-			snprintf( buffer, 29, "%s", "Unknown MQTT state code" );
-	}
-} // End of lookupMQTTCode() function.
 
 
 /**
