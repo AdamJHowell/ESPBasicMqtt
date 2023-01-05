@@ -5,8 +5,10 @@
 #endif
 
 #include <PubSubClient.h>
+#include "privateInfo.h"
 
 #define LED 2
+
 
 
 char ipAddress[16];										// A character array to hold the IP address.
@@ -19,10 +21,10 @@ unsigned long lastBrokerConnect = 0;				// The last time a MQTT broker connectio
 unsigned long brokerCoolDown = 7000;				// How long to wait between MQTT broker connection attempts.
 unsigned long wifiConnectionTimeout = 15000;		// The amount of time to wait for a Wi-Fi connection.
 const unsigned int MCU_LED = 2;						// The GPIO which the onboard LED is connected to.
-const char *wifiSsid = "nunya";						// Wi-Fi SSID.
-const char *wifiPassword = "nunya";					// Wi-Fi password.
-const char *hostname = "GenericESP";				// The hostname.
-const char *broker = "nunya";							// The broker address.
+const char *hostname = "GenericESP";				// The hostname.  Defined in privateInfo.h
+//const char *wifiSsid = "nunya";					// Wi-Fi SSID.  Defined in privateInfo.h
+//const char *wifiPassword = "nunya";				// Wi-Fi password.  Defined in privateInfo.h
+//const char *broker = "nunya";						// The broker address.  Defined in privateInfo.h
 uint16_t port = 2112;									// The broker port.
 
 
