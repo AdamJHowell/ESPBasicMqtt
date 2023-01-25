@@ -25,7 +25,7 @@ const char *hostname = "GenericESP";				// The hostname.  Defined in privateInfo
 //const char *wifiSsid = "nunya";					// Wi-Fi SSID.  Defined in privateInfo.h
 //const char *wifiPassword = "nunya";				// Wi-Fi password.  Defined in privateInfo.h
 //const char *broker = "nunya";						// The broker address.  Defined in privateInfo.h
-uint16_t port = 2112;									// The broker port.
+uint16_t port = 1883;									// The broker port.
 
 
 WiFiClient wifiClient;
