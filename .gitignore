@@ -1,3 +1,6 @@
 .idea/
 cmake-build-*/
-privateInfo.h
+privateInfo.*
+debug_custom.json
+*.svd
+*.iml
