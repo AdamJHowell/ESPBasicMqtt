@@ -15,6 +15,8 @@ char ipAddress[16];										// A character array to hold the IP address.
 char macAddress[18];										// A character array to hold the MAC address, and append a dash and 3 numbers.
 long rssi;													// A global to hold the Received Signal Strength Indicator.
 unsigned int printInterval = 10000;					// How long to wait between stat printouts.
+unsigned long lastLedBlinkTime = 0;         // The last time the LED was blinked.
+unsigned long ledBlinkInterval = 200;       // The blink interval when MQTT is not connected.
 unsigned long printCount = 0;							// A counter of how many times the stats have been published.
 unsigned long lastPrintTime = 0;						// The last time a MQTT publish was performed.
 unsigned long lastBrokerConnect = 0;				// The last time a MQTT broker connection was attempted.
@@ -244,6 +246,19 @@ void mqttConnect()
 
 
 /**
+ * @brief toggleLED() will change the state of the LED.
+ * This function does not manage any timings.
+ */
+void toggleLED()
+{
+	if( digitalRead( MCU_LED ) != 1 )
+		digitalWrite( MCU_LED, 1 );
+	else
+		digitalWrite( MCU_LED, 0 );
+} // End of toggleLED() function.
+
+
+/**
  * @brief setup() will configure the program.
  */
 void setup()
@@ -254,6 +269,7 @@ void setup()
 		delay( 1000 );
 	Serial.println( "\n" );
 	Serial.println( "setup() is beginning." );
+  Serial.println( __FILE__ );
 
 	// Set GPIO 2 (MCU_LED) as an output.
 	pinMode( MCU_LED, OUTPUT );
@@ -278,14 +294,31 @@ void loop()
 	else
 		mqttClient.loop();
 
-	long time = millis();
+	long currentTime = millis();
 	// Print the first time.  Avoid subtraction overflow.  Print every interval.
-	if( lastPrintTime == 0 || ( time > printInterval && ( time - printInterval ) > lastPrintTime ) )
+	if( lastPrintTime == 0 || ( currentTime > printInterval && ( currentTime - printInterval ) > lastPrintTime ) )
 	{
 		readTelemetry();
 		printTelemetry();
 		lastPrintTime = millis();
 
 		Serial.printf( "Next print in %u seconds.\n\n", printInterval / 1000 );
+	}
+
+  	currentTime = millis();
+	// Process the first time.  Avoid subtraction overflow.  Process every interval.
+	if( lastLedBlinkTime == 0 || ( ( currentTime > ledBlinkInterval ) && ( currentTime - ledBlinkInterval ) > lastLedBlinkTime ) )
+	{
+		// If Wi-Fi is connected, but MQTT is not, blink the LED.
+		if( WiFi.status() == WL_CONNECTED )
+		{
+			if( mqttClient.state() != 0 )
+				toggleLED();
+			else
+				digitalWrite( MCU_LED, 1 ); // Turn the LED on to show both Wi-Fi and MQTT are connected.
+		}
+		else
+			digitalWrite( MCU_LED, 0 ); // Turn the LED off to show that Wi-Fi is not connected.
+		lastLedBlinkTime = millis();
 	}
 } // End of loop() function.
