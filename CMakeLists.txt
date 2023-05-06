@@ -4,6 +4,10 @@ project( ESPBasicMqtt )
 set( CMAKE_CXX_STANDARD 14 )
 
 add_executable( ESPBasicMqtt
-		ESPBasicMqtt.ino )
+		ESPBasicMqtt.ino
+		privateInfo.h
+		PubSubClient.cpp
+		PubSubClient.h
+		)
 
 set_target_properties( ESPBasicMqtt PROPERTIES LINKER_LANGUAGE CXX )
