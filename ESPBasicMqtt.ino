@@ -22,10 +22,10 @@ unsigned long lastBrokerConnect = 0;			// The last time a MQTT broker connection
 unsigned long brokerCoolDown = 7000;			// How long to wait between MQTT broker connection attempts.
 unsigned long wifiConnectionTimeout = 15000; // The amount of time to wait for a Wi-Fi connection.
 const unsigned int ONBOARD_LED = 2;				// The GPIO which the onboard LED is connected to.
-const char *hostname = "GenericESP";			// The hostname.  Defined in privateInfo.h
-//const char *wifiSsid = "nunya";					// Wi-Fi SSID.  Defined in privateInfo.h
-//const char *wifiPassword = "nunya";				// Wi-Fi password.  Defined in privateInfo.h
-//const char *broker = "nunya";						// The broker address.  Defined in privateInfo.h
+//const char *HOSTNAME = "GenericESP";			// The HOSTNAME.  Defined in privateInfo.h
+//const char *WIFI_SSID = "nunya";					// Wi-Fi SSID.  Defined in privateInfo.h
+//const char *WIFI_PASSWORD = "nunya";				// Wi-Fi password.  Defined in privateInfo.h
+//const char *BROKER_IP = "nunya";						// The broker address.  Defined in privateInfo.h
 uint16_t port = 1883; // The broker port.
 
 
@@ -115,11 +115,11 @@ void wifiBasicConnect()
 	// Turn the LED off to show Wi-Fi is not connected.
 	digitalWrite( ONBOARD_LED, LOW );
 
-	Serial.printf( "Attempting to connect to Wi-Fi SSID '%s'", wifiSsid );
+	Serial.printf( "Attempting to connect to Wi-Fi SSID '%s'", WIFI_SSID );
 	WiFi.mode( WIFI_STA );
 	WiFi.config( INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE );
-	WiFi.setHostname( hostname );
-	WiFi.begin( wifiSsid, wifiPassword );
+	WiFi.setHostname( HOSTNAME );
+	WiFi.begin( WIFI_SSID, WIFI_PASSWORD );
 
 	unsigned long wifiConnectionStartTime = millis();
 
@@ -180,7 +180,7 @@ void printTelemetry()
 	Serial.println();
 
 	Serial.println( "MQTT info:" );
-	Serial.printf( "  Broker: %s:%d\n", broker, port );
+	Serial.printf( "  Broker: %s:%d\n", BROKER_IP, port );
 	int mqttStateCode = mqttClient.state();
 	lookupMQTTCode( mqttStateCode, buffer );
 	Serial.printf( "  MQTT state: %s\n", buffer );
@@ -195,6 +195,15 @@ void printTelemetry()
 	}
 	Serial.println();
 } // End of printTelemetry() function.
+
+void publishTelemetry()
+{
+	char valueBuffer[25] = "";
+	snprintf( valueBuffer, 25, "%d", rssi );
+
+	// Publish the RSSI.
+	mqttClient.publish( "test/EspBasicMQTT/rssi", valueBuffer );
+} // End of publishTelemetry() function.
 
 /**
  * @brief mqttCallback() will process incoming messages on subscribed topics.
@@ -234,8 +243,8 @@ void mqttConnect()
 	{
 		lastBrokerConnect = millis();
 		digitalWrite( ONBOARD_LED, LOW );
-		Serial.printf( "Connecting to broker at %s:%d...\n", broker, port );
-		mqttClient.setServer( brokerIP, port );
+		Serial.printf( "Connecting to broker at %s:%d...\n", BROKER_IP, port );
+		mqttClient.setServer( BROKER_IP, port );
 		mqttClient.setCallback( mqttCallback );
 
 		if( mqttClient.connect( macAddress ) )
@@ -245,8 +254,8 @@ void mqttConnect()
 			int mqttStateCode = mqttClient.state();
 			char buffer[29];
 			lookupMQTTCode( mqttStateCode, buffer );
-			Serial.printf( "MQTT state: %s\n", buffer );
-			Serial.printf( "MQTT state code: %d\n", mqttStateCode );
+			Serial.printf( "  MQTT state: %s\n", buffer );
+			Serial.printf( "  MQTT state code: %d\n", mqttStateCode );
 			return;
 		}
 
@@ -302,7 +311,7 @@ void loop()
 		mqttClient.loop();
 
 	// Print the first currentTime.  Print every interval.
-	if( lastPrintTime == 0 || ( ( millis() - printInterval ) > lastPrintTime ) )
+	if( lastPrintTime == 0 || ( ( millis() - lastPrintTime ) > printInterval ) )
 	{
 		readTelemetry();
 		printTelemetry();
@@ -312,13 +321,13 @@ void loop()
 	}
 
 	// Process the first currentTime.  Process every interval.
-	if( lastLedBlinkTime == 0 || ( ( millis() - ledBlinkInterval ) > lastLedBlinkTime ) )
+	if( lastLedBlinkTime == 0 || ( ( millis() - lastLedBlinkTime ) > ledBlinkInterval ) )
 	{
 		// If Wi-Fi is connected, but MQTT is not, blink the LED.
 		if( WiFi.status() == WL_CONNECTED )
 		{
 			if( mqttClient.state() != 0 )
-				toggleLED(); // Toggle the LED state to show that Wi-Fi is connected by MQTT is not.
+				toggleLED();						  // Toggle the LED state to show that Wi-Fi is connected by MQTT is not.
 			else
 				digitalWrite( ONBOARD_LED, 1 ); // Turn the LED on to show both Wi-Fi and MQTT are connected.
 		}
