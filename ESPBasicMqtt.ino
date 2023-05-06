@@ -301,9 +301,8 @@ void loop()
 	else
 		mqttClient.loop();
 
-	long currentTime = millis();
-	// Print the first currentTime.  Avoid subtraction overflow.  Print every interval.
-	if( lastPrintTime == 0 || ( currentTime > printInterval && ( currentTime - printInterval ) > lastPrintTime ) )
+	// Print the first currentTime.  Print every interval.
+	if( lastPrintTime == 0 || ( ( millis() - printInterval ) > lastPrintTime ) )
 	{
 		readTelemetry();
 		printTelemetry();
@@ -312,9 +311,8 @@ void loop()
 		Serial.printf( "Next print in %u seconds.\n\n", printInterval / 1000 );
 	}
 
-	currentTime = millis();
-	// Process the first currentTime.  Avoid subtraction overflow.  Process every interval.
-	if( lastLedBlinkTime == 0 || ( ( currentTime > ledBlinkInterval ) && ( currentTime - ledBlinkInterval ) > lastLedBlinkTime ) )
+	// Process the first currentTime.  Process every interval.
+	if( lastLedBlinkTime == 0 || ( ( millis() - ledBlinkInterval ) > lastLedBlinkTime ) )
 	{
 		// If Wi-Fi is connected, but MQTT is not, blink the LED.
 		if( WiFi.status() == WL_CONNECTED )
