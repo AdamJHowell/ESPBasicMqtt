@@ -315,6 +315,7 @@ void loop()
 	{
 		readTelemetry();
 		printTelemetry();
+    publishTelemetry();
 		lastPrintTime = millis();
 
 		Serial.printf( "Next print in %u seconds.\n\n", printInterval / 1000 );
