@@ -1,9 +1,7 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h> // ESP8266 WiFi support.  https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WiFi
 #else
-
 #include <WiFi.h> // Arduino Wi-Fi support.  This header is part of the standard library.  https://www.arduino.cc/en/Reference/WiFi
-
 #endif
 
 #include "PubSubClient.h"
@@ -12,7 +10,7 @@
 
 char ipAddress[16];									// A character array to hold the IP address.
 char macAddress[18];									// A character array to hold the MAC address, and append a dash and 3 numbers.
-long rssi;												// A global to hold the Received Signal Strength Indicator.
+char rssi;												// A global to hold the Received Signal Strength Indicator.
 unsigned int printInterval = 10000;				// How long to wait between stat printouts.
 unsigned int ledBlinkInterval = 200;			// Time between blinks.
 unsigned long printCount = 0;						// A counter of how many times the stats have been published.
@@ -22,7 +20,7 @@ unsigned long lastBrokerConnect = 0;			// The last time a MQTT broker connection
 unsigned long brokerCoolDown = 7000;			// How long to wait between MQTT broker connection attempts.
 unsigned long wifiConnectionTimeout = 15000; // The amount of time to wait for a Wi-Fi connection.
 const unsigned int ONBOARD_LED = 2;				// The GPIO which the onboard LED is connected to.
-//const char *HOSTNAME = "GenericESP";			// The HOSTNAME.  Defined in privateInfo.h
+const char *HOSTNAME = "GenericESP";			// The HOSTNAME.  Defined in privateInfo.h
 //const char *WIFI_SSID = "nunya";				// Wi-Fi SSID.  Defined in privateInfo.h
 //const char *WIFI_PASSWORD = "nunya";			// Wi-Fi password.  Defined in privateInfo.h
 //const char *BROKER_IP = "nunya";				// The broker address.  Defined in privateInfo.h
@@ -116,22 +114,22 @@ void wifiBasicConnect()
 	digitalWrite( ONBOARD_LED, LOW );
 
 	Serial.printf( "Attempting to connect to Wi-Fi SSID '%s'", WIFI_SSID );
-	WiFi.mode( WIFI_STA );
+	WiFiClass::mode( WIFI_STA );
+	WiFiClass::setHostname( HOSTNAME );
 	WiFi.config( INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE );
-	WiFi.setHostname( HOSTNAME );
 	WiFi.begin( WIFI_SSID, WIFI_PASSWORD );
 
 	unsigned long wifiConnectionStartTime = millis();
 
 	// Loop until connected, or until wifiConnectionTimeout.
-	while( WiFi.status() != WL_CONNECTED && ( millis() - wifiConnectionStartTime < wifiConnectionTimeout ) )
+	while( WiFiClass::status() != WL_CONNECTED && ( millis() - wifiConnectionStartTime < wifiConnectionTimeout ) )
 	{
 		Serial.print( "." );
 		delay( 1000 );
 	}
 	Serial.println( "" );
 
-	if( WiFi.status() == WL_CONNECTED )
+	if( WiFiClass::status() == WL_CONNECTED )
 	{
 		// Print that Wi-Fi has connected.
 		Serial.println( "\nWi-Fi connection established!" );
@@ -167,7 +165,7 @@ void printTelemetry()
 
 	Serial.println( "Wi-Fi info:" );
 	Serial.printf( "  MAC address: %s\n", macAddress );
-	int wifiStatusCode = WiFi.status();
+	int wifiStatusCode = WiFiClass::status();
 	char buffer[29] = "";
 	lookupWifiCode( wifiStatusCode, buffer );
 	Serial.printf( "  Wi-Fi status text: %s\n", buffer );
@@ -175,7 +173,7 @@ void printTelemetry()
 	if( wifiStatusCode == 3 )
 	{
 		Serial.printf( "  IP address: %s\n", ipAddress );
-		Serial.printf( "  RSSI: %ld\n", rssi );
+		Serial.printf( "  RSSI: %hhd\n", rssi );
 	}
 	Serial.println();
 
@@ -199,7 +197,7 @@ void printTelemetry()
 void publishTelemetry()
 {
 	char valueBuffer[25] = "";
-	snprintf( valueBuffer, 25, "%d", rssi );
+	snprintf( valueBuffer, 25, "%hhd", rssi );
 
 	// Publish the RSSI.
 	mqttClient.publish( "test/EspBasicMQTT/rssi", valueBuffer );
@@ -220,13 +218,9 @@ void mqttCallback( char *topic, byte *payload, unsigned int length )
 	message[length] = 0x00;
 	Serial.println( message );
 	String str_msg = String( message );
-	if( str_msg.equals( "ON" ) )
+	if( str_msg.equals( "ON" ) || str_msg.equals( "on" ) )
 		digitalWrite( ONBOARD_LED, HIGH );
-	else if( str_msg.equals( "on" ) )
-		digitalWrite( ONBOARD_LED, HIGH );
-	else if( str_msg.equals( "OFF" ) )
-		digitalWrite( ONBOARD_LED, LOW );
-	else if( str_msg.equals( "off" ) )
+	else if( str_msg.equals( "OFF" ) || str_msg.equals( "off" ) )
 		digitalWrite( ONBOARD_LED, LOW );
 	else
 		Serial.printf( "Unknown command '%s'\n", message );
@@ -237,7 +231,7 @@ void mqttCallback( char *topic, byte *payload, unsigned int length )
  */
 void mqttConnect()
 {
-	long time = millis();
+	unsigned long time = millis();
 	// Connect the first time.  Avoid subtraction overflow.  Connect after cool down.
 	if( lastBrokerConnect == 0 || ( time > brokerCoolDown && ( time - brokerCoolDown ) > lastBrokerConnect ) )
 	{
@@ -303,7 +297,7 @@ void setup()
  */
 void loop()
 {
-	if( WiFi.status() != WL_CONNECTED )
+	if( WiFiClass::status() != WL_CONNECTED )
 		wifiBasicConnect();
 	else if( !mqttClient.connected() )
 		mqttConnect();
@@ -325,7 +319,7 @@ void loop()
 	if( lastLedBlinkTime == 0 || ( ( millis() - lastLedBlinkTime ) > ledBlinkInterval ) )
 	{
 		// If Wi-Fi is connected, but MQTT is not, blink the LED.
-		if( WiFi.status() == WL_CONNECTED )
+		if( WiFiClass::status() == WL_CONNECTED )
 		{
 			if( mqttClient.state() != 0 )
 				toggleLED();						  // Toggle the LED state to show that Wi-Fi is connected by MQTT is not.

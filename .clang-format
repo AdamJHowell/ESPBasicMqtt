@@ -69,4 +69,4 @@ SpacesInContainerLiterals:                 false
 SpacesInParentheses:                       true
 SpacesInSquareBrackets:                    false
 TabWidth:                                  3
-UseTab:                                    Always
+UseTab:                                    Never
