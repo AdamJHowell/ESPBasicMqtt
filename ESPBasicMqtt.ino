@@ -23,9 +23,9 @@ unsigned long brokerCoolDown = 7000;			// How long to wait between MQTT broker c
 unsigned long wifiConnectionTimeout = 15000; // The amount of time to wait for a Wi-Fi connection.
 const unsigned int ONBOARD_LED = 2;				// The GPIO which the onboard LED is connected to.
 //const char *HOSTNAME = "GenericESP";			// The HOSTNAME.  Defined in privateInfo.h
-//const char *WIFI_SSID = "nunya";					// Wi-Fi SSID.  Defined in privateInfo.h
-//const char *WIFI_PASSWORD = "nunya";				// Wi-Fi password.  Defined in privateInfo.h
-//const char *BROKER_IP = "nunya";						// The broker address.  Defined in privateInfo.h
+//const char *WIFI_SSID = "nunya";				// Wi-Fi SSID.  Defined in privateInfo.h
+//const char *WIFI_PASSWORD = "nunya";			// Wi-Fi password.  Defined in privateInfo.h
+//const char *BROKER_IP = "nunya";				// The broker address.  Defined in privateInfo.h
 uint16_t port = 1883; // The broker port.
 
 
@@ -315,7 +315,7 @@ void loop()
 	{
 		readTelemetry();
 		printTelemetry();
-    publishTelemetry();
+		publishTelemetry();
 		lastPrintTime = millis();
 
 		Serial.printf( "Next print in %u seconds.\n\n", printInterval / 1000 );
