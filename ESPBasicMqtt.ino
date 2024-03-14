@@ -322,7 +322,7 @@ void loop()
 		if( WiFiClass::status() == WL_CONNECTED )
 		{
 			if( mqttClient.state() != 0 )
-				toggleLED();						  // Toggle the LED state to show that Wi-Fi is connected by MQTT is not.
+				toggleLED();						  // Toggle the LED state to show that Wi-Fi is connected but MQTT is not.
 			else
 				digitalWrite( ONBOARD_LED, 1 ); // Turn the LED on to show both Wi-Fi and MQTT are connected.
 		}
